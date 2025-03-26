@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Button</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f0f0;
+      overflow-x: hidden;
+    }
+    #randomButton {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10000;
+      padding: 20px 40px;
+      font-size: 24px;
+      border: none;
+      background-color: #008cba;
+      color: #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.3s, background-color 0.3s, letter-spacing 0.3s;
+    }
+    #randomButton:hover {
+      background-color: #005f5f;
+    }
+    @keyframes shake {
+      0% { transform: translate(0px, 0px); }
+      20% { transform: translate(-10px, 0px); }
+      40% { transform: translate(10px, 0px); }
+      60% { transform: translate(-10px, 0px); }
+      80% { transform: translate(10px, 0px); }
+      100% { transform: translate(0px, 0px); }
+    }
+    .shake {
+      animation: shake 0.5s;
+    }
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      opacity: 0.8;
+      animation: fall 2s linear forwards;
+    }
+    @keyframes fall {
+      0% { transform: translateY(0px); opacity: 1; }
+      100% { transform: translateY(100vh); opacity: 0; }
+    }
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+      font-size: 2em;
+      z-index: 1000;
+    }
+    .mini-game-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 20000;
+      color: #fff;
+    }
+    .mini-game-info {
+      margin-bottom: 20px;
+      font-size: 1.5em;
+    }
+    canvas {
+      border: 2px solid #fff;
+      border-radius: 8px;
+      background: #222;
+    }
+  </style>
+</head>
+<body>
+  <button id="randomButton">Press the Button!</button>
+  <script>
+    function randomColor() {
+      const letters = '0123456789ABCDEF';
+      let color = '#';
+      for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+      }
+      return color;
+    }
+    function randomString(length = 8) {
+      return Math.random().toString(36).substring(2, 2 + length);
+    }
+    function randomFromArray(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+    const randomURLs = [
+      "https://www.wikipedia.org",
+      "https://www.openstreetmap.org"
+    ];
+    const cursors = ["pointer", "crosshair", "help", "wait", "move", "not-allowed"];
+    function playBeep() {
+      let context = new (window.AudioContext || window.webkitAudioContext)();
+      let oscillator = context.createOscillator();
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(440, context.currentTime);
+      oscillator.connect(context.destination);
+      oscillator.start();
+      setTimeout(() => {
+        oscillator.stop();
+        context.close();
+      }, 300);
+    }
+    function shakeScreen() {
+      document.body.classList.add('shake');
+      setTimeout(() => document.body.classList.remove('shake'), 500);
+    }
+    function flashBackground() {
+      const flashes = 5;
+      const originalColor = document.body.style.backgroundColor || "#f0f0f0";
+      let count = 0;
+      const interval = setInterval(() => {
+        document.body.style.backgroundColor = randomColor();
+        count++;
+        if (count >= flashes) {
+          clearInterval(interval);
+          document.body.style.backgroundColor = originalColor;
+        }
+      }, 200);
+    }
+    function createConfetti() {
+      for (let i = 0; i < 30; i++) {
+        let confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.backgroundColor = randomColor();
+        confetti.style.top = Math.random() * window.innerHeight + 'px';
+        confetti.style.left = Math.random() * window.innerWidth + 'px';
+        document.body.appendChild(confetti);
+        setTimeout(() => confetti.remove(), 2000);
+      }
+    }
+    function showModal() {
+      let modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.innerText = "Surprise Modal!";
+      document.body.appendChild(modal);
+      setTimeout(() => modal.remove(), 2000);
+    }
+    function createCanvasArt() {
+      let canvas = document.createElement('canvas');
+      canvas.width = 300;
+      canvas.height = 300;
+      document.body.appendChild(canvas);
+      let ctx = canvas.getContext('2d');
+      ctx.fillStyle = randomColor();
+      ctx.fillRect(Math.random() * 250, Math.random() * 250, 50, 50);
+      ctx.beginPath();
+      ctx.arc(Math.random() * 300, Math.random() * 300, 20, 0, Math.PI * 2);
+      ctx.fillStyle = randomColor();
+      ctx.fill();
+    }
+    function createParticles() {
+      for (let i = 0; i < 20; i++) {
+        let particle = document.createElement('div');
+        particle.style.position = 'absolute';
+        particle.style.width = '5px';
+        particle.style.height = '5px';
+        particle.style.backgroundColor = randomColor();
+        particle.style.top = Math.random() * window.innerHeight + 'px';
+        particle.style.left = Math.random() * window.innerWidth + 'px';
+        particle.style.opacity = 1;
+        particle.style.transition = 'top 2s linear, opacity 2s linear';
+        document.body.appendChild(particle);
+        setTimeout(() => {
+          particle.style.top = window.innerHeight + 'px';
+          particle.style.opacity = 0;
+        }, 50);
+        setTimeout(() => particle.remove(), 2050);
+      }
+    }
+
+    function startMiniGame() {
+      const mainButton = document.getElementById("randomButton");
+      mainButton.disabled = true;
+      const overlay = document.createElement('div');
+      overlay.id = "miniGameOverlay";
+      overlay.className = "mini-game-overlay";
+
+      const info = document.createElement('div');
+      info.className = "mini-game-info";
+      info.innerText = "Score: 0 | Time Left: 10s";
+      overlay.appendChild(info);
+
+
+      const canvas = document.createElement('canvas');
+      canvas.id = "miniGameCanvas";
+      canvas.width = window.innerWidth * 0.8;
+      canvas.height = window.innerHeight * 0.8;
+      overlay.appendChild(canvas);
+      document.body.appendChild(overlay);
+      const ctx = canvas.getContext('2d');
+      let score = 0;
+      let timeLeft = 10; 
+      let target = { x: 0, y: 0, r: 30, color: randomColor() };
+
+
+      
+
+      function newTarget() {
+        target.r = Math.floor(Math.random() * 20) + 20;
+        target.x = Math.random() * (canvas.width - 2 * target.r) + target.r;
+        target.y = Math.random() * (canvas.height - 2 * target.r) + target.r;
+        target.color = randomColor();
+        drawTarget();
+      }
+
+      function drawTarget() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.beginPath();
+        ctx.arc(target.x, target.y, target.r, 0, Math.PI * 2);
+        ctx.fillStyle = target.color;
+        ctx.fill();
+      }
+
+      newTarget();
+      function handleCanvasClick(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const clickY = e.clientY - rect.top;
+        const dist = Math.sqrt((clickX - target.x) ** 2 + (clickY - target.y) ** 2);
+        if (dist <= target.r) {
+          score++;
+          newTarget();
+          info.innerText = `Score: ${score} | Time Left: ${timeLeft}s`;
+        }
+      }
+      canvas.addEventListener('click', handleCanvasClick);
+      const timerInterval = setInterval(() => {
+        timeLeft--;
+        info.innerText = `Score: ${score} | Time Left: ${timeLeft}s`;
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+        }
+      }, 1000);
+      setTimeout(() => {
+        canvas.removeEventListener('click', handleCanvasClick);
+        info.innerText = `Game Over! Your score: ${score}`;
+        setTimeout(() => {
+          overlay.remove();
+          mainButton.disabled = false;
+        }, 3000);
+      }, 10000);
+    }
+    function randomAction() {
+      const rand = Math.floor(Math.random() * 1700) + 1;
+      console.log("Random seed: " + rand);
+      if (rand <= 100) {
+        document.body.style.backgroundColor = randomColor();
+      } else if (rand <= 200) {
+        const messages = ["Hello World!", "Keep going!", "Surprise!", "Randomness!", "Wow!"];
+        document.getElementById("randomButton").innerText = randomFromArray(messages);
+      } else if (rand <= 300) {
+        window.open(randomFromArray(randomURLs), '_blank');
+      } else if (rand <= 350) {
+        playBeep();
+      } else if (rand <= 400) {
+        shakeScreen();
+      } else if (rand <= 450) {
+        flashBackground();
+      } else if (rand <= 500) {
+        let newDiv = document.createElement("div");
+        newDiv.innerText = "Random: " + randomString(12);
+        newDiv.style.position = "absolute";
+        let topPos = Math.random() * (window.innerHeight - 50);
+        let leftPos = Math.random() * (window.innerWidth - 150);
+        if(Math.abs(topPos - window.innerHeight/2) < 50 && Math.abs(leftPos - window.innerWidth/2) < 150) {
+          topPos += 100;
+          leftPos += 100;
+        }
+        newDiv.style.top = topPos + "px";
+        newDiv.style.left = leftPos + "px";
+        newDiv.style.color = randomColor();
+        newDiv.style.pointerEvents = "none";
+        document.body.appendChild(newDiv);
+      } else if (rand <= 550) {
+        let btn = document.getElementById("randomButton");
+        btn.style.display = (btn.style.display === "none" ? "block" : "none");
+      } else if (rand <= 600) {
+        let circle = document.createElement("div");
+        let size = Math.floor(Math.random() * 100) + 20;
+        circle.style.width = size + "px";
+        circle.style.height = size + "px";
+        circle.style.borderRadius = "50%";
+        circle.style.backgroundColor = randomColor();
+        circle.style.position = "absolute";
+        circle.style.top = Math.random() * (window.innerHeight - size) + "px";
+        circle.style.left = Math.random() * (window.innerWidth - size) + "px";
+        document.body.appendChild(circle);
+      } else if (rand <= 650) {
+        console.log("Nothing special... " + randomString());
+      } else if (rand <= 700) {
+        document.title = "Title: " + randomString(6);
+      } else if (rand <= 750) {
+        const emojis = ["😄", "🎉", "🚀", "💥", "✨", "🔥"];
+        document.getElementById("randomButton").innerText += " " + randomFromArray(emojis);
+      } else if (rand <= 800) {
+        createConfetti();
+      } else if (rand <= 850) {
+        let color1 = randomColor();
+        let color2 = randomColor();
+        document.body.style.background = "linear-gradient(45deg, " + color1 + ", " + color2 + ")";
+      } else if (rand <= 900) {
+        document.body.style.cursor = randomFromArray(cursors);
+      } else if (rand <= 950) {
+        let img = document.createElement("img");
+        img.src = "https://picsum.photos/200/300?random=" + Math.floor(Math.random() * 1000);
+        img.style.position = "absolute";
+        img.style.top = Math.random() * (window.innerHeight - 300) + "px";
+        img.style.left = Math.random() * (window.innerWidth - 200) + "px";
+        document.body.appendChild(img);
+      } else if (rand <= 1000) {
+        let newBtn = document.createElement("button");
+        newBtn.innerText = "New Button " + randomString(3);
+        newBtn.style.padding = "10px 20px";
+        newBtn.style.margin = "5px";
+        newBtn.onclick = randomAction;
+        document.body.appendChild(newBtn);
+      } else if (rand <= 1050) {
+        document.body.style.color = randomColor();
+      } else if (rand <= 1100) {
+        document.body.style.transform = "rotate(" + (Math.random() * 20 - 10) + "deg)";
+        setTimeout(() => { document.body.style.transform = "rotate(0deg)"; }, 1000);
+      } else if (rand <= 1150) {
+        showModal();
+      } else if (rand <= 1200) {
+        for (let i = 0; i < 5; i++) {
+          let circle = document.createElement("div");
+          let size = Math.floor(Math.random() * 80) + 20;
+          circle.style.width = size + "px";
+          circle.style.height = size + "px";
+          circle.style.borderRadius = "50%";
+          circle.style.backgroundColor = randomColor();
+          circle.style.position = "absolute";
+          circle.style.top = Math.random() * (window.innerHeight - size) + "px";
+          circle.style.left = Math.random() * (window.innerWidth - size) + "px";
+          document.body.appendChild(circle);
+        }
+      } else if (rand <= 1250) {
+        document.getElementById("randomButton").style.letterSpacing = Math.floor(Math.random() * 10) + "px";
+      } else if (rand <= 1300) {
+        let p = document.createElement("p");
+        p.innerText = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " + randomString(20);
+        p.style.maxWidth = "300px";
+        p.style.position = "absolute";
+        p.style.top = Math.random() * (window.innerHeight - 50) + "px";
+        p.style.left = Math.random() * (window.innerWidth - 300) + "px";
+        document.body.appendChild(p);
+      } else if (rand <= 1350) {
+        let context = new (window.AudioContext || window.webkitAudioContext)();
+        let oscillator = context.createOscillator();
+        oscillator.type = 'square';
+        oscillator.frequency.setValueAtTime(330, context.currentTime);
+        oscillator.connect(context.destination);
+        oscillator.start();
+        setTimeout(() => {
+          oscillator.stop();
+          context.close();
+        }, 300);
+      } else if (rand <= 1400) {
+        let btn = document.getElementById("randomButton");
+        btn.style.borderRadius = Math.floor(Math.random() * 50) + "px";
+        btn.style.padding = (Math.floor(Math.random() * 30) + 10) + "px " + (Math.floor(Math.random() * 50) + 20) + "px";
+        btn.style.fontSize = (Math.floor(Math.random() * 10) + 20) + "px";
+      } else if (rand <= 1450) {
+        document.body.style.backgroundImage = "url('https://picsum.photos/800/600?random=" + Math.floor(Math.random() * 1000) + "')";
+        document.body.style.backgroundSize = "cover";
+      } else if (rand <= 1500) {
+        createCanvasArt();
+      } else if (rand <= 1550) {
+        window.scrollTo(Math.random() * document.body.scrollWidth, Math.random() * document.body.scrollHeight);
+      } else if (rand <= 1600) {
+        createParticles();
+      } else if (rand <= 1650) {
+        startMiniGame();
+      } else {
+        console.log("Default random action: " + randomString(10));
+      }
+    }
+    document.getElementById("randomButton").addEventListener("click", randomAction);
+  </script>
+</body>
+</html>
